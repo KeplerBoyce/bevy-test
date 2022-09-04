@@ -1,5 +1,3 @@
-use bevy_rapier3d::prelude::NoUserData;
-use bevy_rapier3d::prelude::RapierPhysicsPlugin;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use bevy_inspector_egui::WorldInspectorPlugin;
