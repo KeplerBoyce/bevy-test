@@ -21,6 +21,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     // plane
     commands
@@ -50,6 +51,7 @@ fn setup(
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
                 intensity: 5000.0,
+                range: 100.0,
                 shadows_enabled: true,
                 ..default()
             },
@@ -58,18 +60,13 @@ fn setup(
         });
     // player
     commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Capsule {
-                depth: 0.5,
-                radius: 0.25,
-                ..default()
-            })),
-            material: materials.add(Color::rgb(1.0, 0.5, 0.0).into()),
-            transform: Transform::from_xyz(2.0, 0.25, 2.0),
+        .spawn_bundle(SceneBundle {
+            scene: asset_server.load("duck.glb#Scene0"),
+            transform: Transform::from_xyz(2.0, 2.0, 2.0),
             ..default()
         })
         .insert(RigidBody::Dynamic)
-        .insert(Collider::capsule_y(0.25, 0.25))
+        .insert(Collider::ball(0.38))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(PlayerMove {
             ..default()
@@ -78,11 +75,11 @@ fn setup(
             parent.spawn_bundle(Camera3dBundle {
                 projection: OrthographicProjection {
                     scale: 3.0,
-                    scaling_mode: ScalingMode::FixedVertical(2.0),
+                    scaling_mode: ScalingMode::FixedVertical(3.0),
                     ..default()
                 }
                 .into(),
-                transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+                transform: Transform::from_xyz(100.0, 100.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
                 ..default()
             });
         });
