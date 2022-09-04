@@ -53,7 +53,7 @@ fn setup(
                 shadows_enabled: true,
                 ..default()
             },
-            transform: Transform::from_xyz(4.0, 8.0, 4.0),
+            transform: Transform::from_xyz(4.0, 8.0, -2.0),
             ..default()
         });
     // player
