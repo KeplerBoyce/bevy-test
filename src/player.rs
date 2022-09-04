@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use num::clamp;
+use libm::atan2;
 
 #[derive(Component)]
 pub struct PlayerMove {
@@ -8,6 +9,9 @@ pub struct PlayerMove {
     pub speed_x: f32,
     pub speed_z: f32,
 }
+
+#[derive(Component)]
+pub struct PlayerParent;
 
 impl Default for PlayerMove {
     fn default() -> Self {
@@ -20,13 +24,15 @@ impl Default for PlayerMove {
     }
 }
 
-//move camera with WASD keys
+//move player with WASD keys
 pub fn move_player(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut query: Query<(&mut PlayerMove, &mut Transform), With<PlayerMove>>,
+    mut q_parent: Query<&mut Transform, With<PlayerParent>>,
+    mut query: Query<(&mut PlayerMove, &mut Transform, &Parent), (Without<PlayerParent>, With<PlayerMove>)>,
 ) {
-    for (mut player_move, mut transform) in query.iter_mut() {
+    for (mut player_move, mut transform, parent) in query.iter_mut() {
+        let mut parent_transform = q_parent.get_mut(parent.get()).unwrap();
         //set target speeds based on keys pressed
         let mut target_speed_x = 0.0;
         let mut target_speed_z = 0.0;
@@ -70,7 +76,8 @@ pub fn move_player(
         //clamp speeds and apply translation
         player_move.speed_x = clamp(player_move.speed_x, -player_move.max_speed, player_move.max_speed);
         player_move.speed_z = clamp(player_move.speed_z, -player_move.max_speed, player_move.max_speed);
-        transform.translation.x += player_move.speed_x * time.delta_seconds();
-        transform.translation.z += player_move.speed_z * time.delta_seconds();
+        parent_transform.translation.x += player_move.speed_x * time.delta_seconds();
+        parent_transform.translation.z += player_move.speed_z * time.delta_seconds();
+        transform.rotate(Quat::from_rotation_y(atan2(player_move.speed_x as f64, player_move.speed_z as f64) as f32));
     }
 }
