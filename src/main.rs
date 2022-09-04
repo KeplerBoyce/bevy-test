@@ -59,15 +59,17 @@ fn setup(
     // player
     commands
         .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube {
-                size: 0.5
+            mesh: meshes.add(Mesh::from(shape::Capsule {
+                depth: 0.5,
+                radius: 0.25,
+                ..default()
             })),
             material: materials.add(Color::rgb(1.0, 0.5, 0.0).into()),
             transform: Transform::from_xyz(2.0, 0.25, 2.0),
             ..default()
         })
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(0.25, 0.25, 0.25))
+        .insert(Collider::capsule_y(0.25, 0.25))
         .insert(LockedAxes::ROTATION_LOCKED)
         .insert(PlayerMove {
             ..default()
