@@ -19,6 +19,8 @@ pub struct PlayerMove {
     pub speed_x: f32,
     pub speed_z: f32,
     pub accel: f32,
+    pub jump_v: f32,
+    pub jumping: bool,
 }
 
 impl Default for PlayerMove {
@@ -29,6 +31,8 @@ impl Default for PlayerMove {
             speed_x: 0.0,
             speed_z: 0.0,
             accel: 10.0,
+            jump_v: 2.0,
+            jumping: false,
         }
     }
 }
@@ -60,6 +64,10 @@ fn setup_player(
         .insert(RigidBody::Dynamic)
         .insert(Collider::capsule_y(0.25, 0.25))
         .insert(LockedAxes::ROTATION_LOCKED_X | LockedAxes::ROTATION_LOCKED_Z)
+        .insert(Velocity {
+            ..default()
+        })
+        .insert(GravityScale(0.5))
         .insert(PlayerMove {
             ..default()
         });
@@ -70,13 +78,13 @@ fn player_move(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     windows: Res<Windows>,
-    mut query: Query<(&mut PlayerMove, &mut Transform), With<PlayerMove>>,
+    mut query: Query<(&mut PlayerMove, &mut Velocity, &mut Transform, ), With<PlayerMove>>,
 ) {
     if let Some(window) = windows.get_primary() {
-        for (mut player_move, mut transform) in query.iter_mut() {
+        for (mut player_move, mut velocity, mut transform) in query.iter_mut() {
 
             //set target speeds from keys pressed
-            let mut velocity = Vec3::ZERO;
+            let mut move_vel = Vec3::ZERO;
             let mut target_x = 0.0;
             let mut target_z = 0.0;
             for key in keys.get_pressed() {
@@ -86,6 +94,12 @@ fn player_move(
                         KeyCode::A => target_x -= player_move.speed,
                         KeyCode::S => target_z -= player_move.speed,
                         KeyCode::D => target_x += player_move.speed,
+                        KeyCode::Space => {
+                            if !player_move.jumping {
+                                velocity.linvel.y = player_move.jump_v;
+                                player_move.jumping = true;
+                            }
+                        },
                         _ => (),
                     }
                 }
@@ -122,10 +136,10 @@ fn player_move(
             }
             //apply translations
             let local_z = transform.local_z();
-            velocity += Vec3::new(local_z.z, 0.0, -local_z.x) * player_move.speed_x;
-            velocity += Vec3::new(-local_z.x, 0.0, -local_z.z) * player_move.speed_z;
-            transform.translation.x += velocity.x * time.delta_seconds();
-            transform.translation.z += velocity.z * time.delta_seconds();
+            move_vel += Vec3::new(local_z.z, 0.0, -local_z.x).normalize() * player_move.speed_x;
+            move_vel += Vec3::new(-local_z.x, 0.0, -local_z.z).normalize() * player_move.speed_z;
+            transform.translation.x += move_vel.x * time.delta_seconds();
+            transform.translation.z += move_vel.z * time.delta_seconds();
         }
     } else {
         warn!("Primary window not found for `player_move`!");
