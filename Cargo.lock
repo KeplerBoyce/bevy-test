@@ -3246,7 +3246,6 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "bevy_rapier3d",
- "libm",
  "num",
 ]
 
